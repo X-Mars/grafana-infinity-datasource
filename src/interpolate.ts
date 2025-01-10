@@ -19,7 +19,7 @@ export const interpolateQuery = (query: InfinityQuery, scopedVars: ScopedVars): 
         body_type: replaceVariable(newQuery.url_options?.body_type || '', scopedVars) as QueryBodyType,
         body_content_type: replaceVariable(newQuery.url_options?.body_content_type || '', scopedVars) as QueryBodyContentType,
         body_graphql_query: replaceVariable(newQuery.url_options?.body_graphql_query || '', scopedVars),
-        // body_graphql_variables: replaceVariable(newQuery.url_options?.body_graphql_variables || '', scopedVars),
+        body_graphql_variables: replaceVariable(newQuery.url_options?.body_graphql_variables || '', scopedVars),
         body_form: newQuery.url_options?.body_form?.map((f) => {
           return {
             ...f,
@@ -39,9 +39,16 @@ export const interpolateQuery = (query: InfinityQuery, scopedVars: ScopedVars): 
           };
         }),
       };
+      if (newQuery.pagination_mode === 'list') {
+        newQuery.pagination_param_list_value = replaceVariable(newQuery.pagination_param_list_value || '', scopedVars);
+      }
     }
     if (newQuery.source === 'inline') {
       newQuery.data = replaceVariable(newQuery.data, scopedVars);
+    }
+    if (newQuery.source === 'azure-blob') {
+      newQuery.azBlobName = replaceVariable(newQuery.azBlobName, scopedVars);
+      newQuery.azContainerName = replaceVariable(newQuery.azContainerName, scopedVars);
     }
     if (isDataQuery(newQuery)) {
       newQuery.filters = (newQuery.filters || []).map((filter) => {
@@ -60,10 +67,11 @@ export const interpolateQuery = (query: InfinityQuery, scopedVars: ScopedVars): 
     if (newQuery.type === 'groq' || (newQuery.type === 'json' && newQuery.parser === 'groq')) {
       newQuery.groq = replaceVariable(newQuery.groq || '', scopedVars);
     }
-    if (newQuery.type === 'json' && newQuery.parser === 'sqlite') {
-      newQuery.sqlite_query = replaceVariable(newQuery.sqlite_query || '', scopedVars);
-    }
-    if ((newQuery.type === 'json' || newQuery.type === 'graphql' || newQuery.type === 'csv' || newQuery.type === 'tsv') && newQuery.parser === 'backend') {
+    if (
+      (newQuery.type === 'json' || newQuery.type === 'graphql' || newQuery.type === 'csv' || newQuery.type === 'tsv' || newQuery.type === 'html' || newQuery.type === 'xml') &&
+      newQuery.parser === 'backend'
+    ) {
+      newQuery.root_selector = replaceVariable(newQuery.root_selector || '', scopedVars);
       newQuery.computed_columns = (newQuery.computed_columns || []).map((c) => {
         return {
           ...c,

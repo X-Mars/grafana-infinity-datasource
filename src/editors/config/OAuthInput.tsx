@@ -1,9 +1,8 @@
-import { onUpdateDatasourceSecureJsonDataOption } from '@grafana/data';
+import { onUpdateDatasourceSecureJsonDataOption, DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data';
 import { InlineFormLabel, Input, LegacyForms, LinkButton, RadioButtonGroup } from '@grafana/ui';
 import React from 'react';
 import { SecureFieldsEditor } from './../../components/config/SecureFieldsEditor';
 import type { InfinityOptions, InfinitySecureOptions, OAuth2Props, OAuth2Type } from './../../types';
-import type { DataSourcePluginOptionsEditorProps, SelectableValue } from '@grafana/data/types';
 
 const oAuthTypes: Array<SelectableValue<OAuth2Type>> = [
   { value: 'client_credentials', label: 'Client Credentials' },
@@ -15,8 +14,7 @@ export const OAuthInputsEditor = (props: DataSourcePluginOptionsEditorProps<Infi
   const { options, onOptionsChange } = props;
   const { secureJsonFields } = options;
   const secureJsonData = (options.secureJsonData || {}) as InfinitySecureOptions;
-  const oauth2: OAuth2Props = options?.jsonData?.oauth2 || {};
-  oauth2.oauth2_type = oauth2.oauth2_type || 'client_credentials';
+  let oauth2: OAuth2Props = options?.jsonData?.oauth2 || {};
   const onOAuth2PropsChange = <T extends keyof OAuth2Props, V extends OAuth2Props[T]>(key: T, value: V) => {
     onOptionsChange({ ...options, jsonData: { ...options.jsonData, oauth2: { ...oauth2, [key]: value } } });
   };
@@ -42,8 +40,36 @@ export const OAuthInputsEditor = (props: DataSourcePluginOptionsEditorProps<Infi
         </InlineFormLabel>
         <RadioButtonGroup<OAuth2Type> options={oAuthTypes} onChange={(v) => onOAuth2PropsChange('oauth2_type', v)} value={oauth2.oauth2_type || 'client_credentials'}></RadioButtonGroup>
       </div>
-      {oauth2.oauth2_type === 'client_credentials' && (
+      {(oauth2.oauth2_type === 'client_credentials' || !oauth2?.oauth2_type) && (
         <>
+          <div className="gf-form">
+            <InlineFormLabel
+              width={10}
+              tooltip={
+                <>
+                  {`AuthStyleAutoDetect means to auto-detect which authentication style the provider wants by trying both ways and caching the successful way for the future.`}
+                  <br />
+                  <br />
+                  {`AuthStyleInParams sends the "client_id" and "client_secret" in the POST body as application/x-www-form-urlencoded parameters.`}
+                  <br />
+                  <br />
+                  {`AuthStyleInHeader sends the client_id and client_password using HTTP Basic Authorization. This is an optional style described in the OAuth2 RFC 6749 section 2.3.1.`}
+                </>
+              }
+              {...{ interactive: true }}
+            >
+              Auth Style
+            </InlineFormLabel>
+            <RadioButtonGroup
+              options={[
+                { value: 0, label: 'Auto' },
+                { value: 1, label: 'In Params' },
+                { value: 2, label: 'In Header' },
+              ]}
+              onChange={(v) => onOAuth2PropsChange('authStyle', v || 0)}
+              value={oauth2.authStyle || 0}
+            ></RadioButtonGroup>
+          </div>
           <div className="gf-form">
             <InlineFormLabel width={10}>Client ID</InlineFormLabel>
             <Input onChange={(v) => onOAuth2PropsChange('client_id', v.currentTarget.value)} value={oauth2.client_id} width={30} placeholder={'Client ID'} />
@@ -149,7 +175,7 @@ export const OAuthInputsEditor = (props: DataSourcePluginOptionsEditorProps<Infi
             Looking for more OAuth support?
             <br />
             <br />
-            <LinkButton href="https://github.com/yesoreyeram/grafana-infinity-datasource/discussions/260" target="_blank" rel="noreferrer" variant="secondary" size="md">
+            <LinkButton href="https://github.com/grafana/grafana-infinity-datasource/discussions/260" target="_blank" rel="noreferrer" variant="secondary" size="md">
               Click here to know more
             </LinkButton>
           </p>

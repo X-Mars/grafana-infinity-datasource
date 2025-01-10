@@ -1,14 +1,15 @@
 package infinity
 
 import (
+	"context"
 	"errors"
 	"strings"
 
-	querySrv "github.com/yesoreyeram/grafana-infinity-datasource/pkg/query"
-	settingsSrv "github.com/yesoreyeram/grafana-infinity-datasource/pkg/settings"
+	"github.com/grafana/grafana-infinity-datasource/pkg/models"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 )
 
-func UpdateQueryWithReferenceData(query querySrv.Query, settings settingsSrv.InfinitySettings) (querySrv.Query, error) {
+func UpdateQueryWithReferenceData(ctx context.Context, query models.Query, settings models.InfinitySettings) (models.Query, error) {
 	if query.Source == "reference" {
 		for _, item := range settings.ReferenceData {
 			if strings.EqualFold(item.Name, query.RefName) {
@@ -17,7 +18,7 @@ func UpdateQueryWithReferenceData(query querySrv.Query, settings settingsSrv.Inf
 				return query, nil
 			}
 		}
-		return query, errors.New("error getting reference data. Either empty or not defined")
+		return query, backend.DownstreamError(errors.New("error getting reference data. Either empty or not defined"))
 	}
 	return query, nil
 }

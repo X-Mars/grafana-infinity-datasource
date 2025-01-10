@@ -24,6 +24,7 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
       <EditorField
         label="Parser"
         tooltip={query.parser !== 'backend' ? 'Try backend parser to get support for alerting, public dashboards, query caching, recorded queries and many more options' : ''}
+        horizontal={true}
         promoNode={
           query.parser !== 'backend' && query.parser !== 'uql' ? (
             <span
@@ -46,7 +47,6 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
           options={[
             { value: 'simple', label: 'Default' },
             { value: 'backend', label: 'Backend' },
-            // { value: 'sqlite', label: 'SQLite' },
             { value: 'uql', label: 'UQL' },
             { value: 'groq', label: 'GROQ' },
           ]}
@@ -57,9 +57,6 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
             } else if (query.parser === 'groq') {
               let groq = query.groq || '*';
               onChange({ ...query, parser: e.value, groq });
-            } else if (query.parser === 'sqlite') {
-              let sqlite_query = query.sqlite_query || 'SELECT * FROM input';
-              onChange({ ...query, parser: e.value, sqlite_query });
             } else {
               onChange({ ...query, parser: e.value });
             }
@@ -73,6 +70,7 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
     return (
       <EditorField
         label="Parser"
+        horizontal={true}
         promoNode={
           query.parser !== 'backend' && query.parser !== 'uql' ? (
             <span
@@ -116,6 +114,7 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
     return (
       <EditorField
         label="Parser"
+        horizontal={true}
         promoNode={
           query.parser !== 'backend' && query.parser !== 'uql' ? (
             <span
@@ -156,6 +155,7 @@ export const ParseTypeEditor = (props: { query: InfinityQuery; onChange: (value:
     return (
       <EditorField
         label="Parser"
+        horizontal={true}
         promoNode={
           query.parser !== 'backend' ? (
             <span

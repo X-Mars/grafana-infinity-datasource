@@ -23,13 +23,13 @@ export const FormatSelector = (props: FormatSelectorProps) => {
     if (query.type === 'json') {
       return INFINITY_RESULT_FORMATS;
     } else if (query.type === 'uql') {
-      return INFINITY_RESULT_FORMATS.filter((f) => f.value === 'table' || f.value === 'timeseries' || f.value === 'dataframe');
+      return INFINITY_RESULT_FORMATS.filter((f) => f.value === 'table' || f.value === 'timeseries' || f.value === 'logs' || f.value === 'trace' || f.value === 'dataframe');
     } else {
       return INFINITY_RESULT_FORMATS.filter((f) => f.value !== 'as-is');
     }
   };
   return (
-    <EditorField label={Components.QueryEditor.Format.Label.Text}>
+    <EditorField label={Components.QueryEditor.Format.Label.Text} horizontal={true}>
       <div title={Components.QueryEditor.Format.Dropdown.PlaceHolder.Title} data-testid="infinity-query-format-selector">
         <Select className="min-width-12 width-12" value={query.format} options={getFormats()} onChange={(e) => onFormatChange(e.value as InfinityQueryFormat)} menuShouldPortal={true} />
       </div>
