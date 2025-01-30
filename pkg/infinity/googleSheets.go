@@ -1,15 +1,16 @@
 package infinity
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/grafana/grafana-infinity-datasource/pkg/models"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
-	"github.com/yesoreyeram/grafana-framer/gframer"
-	querySrv "github.com/yesoreyeram/grafana-infinity-datasource/pkg/query"
+	"github.com/grafana/infinity-libs/lib/go/gframer"
 )
 
 type Spreadsheet struct {
@@ -37,25 +38,26 @@ type CellData struct {
 	NullFields     []string `json:"-"`
 }
 
-func GetGoogleSheetsResponse(urlResponseObject interface{}, query querySrv.Query) (*data.Frame, error) {
+func GetGoogleSheetsResponse(ctx context.Context, urlResponseObject any, query models.Query) (*data.Frame, error) {
+	logger := backend.Logger.FromContext(ctx)
 	frame := GetDummyFrame(query)
 	sheetsString, ok := urlResponseObject.(string)
 	if !ok {
-		backend.Logger.Error("error getting response for query", "error", "invalid response received from google sheets")
+		logger.Debug("error getting response for query", "error", "invalid response received from google sheets")
 		frame.Meta.Custom = &CustomMeta{
 			Query: query,
 			Error: "invalid response received from google sheets",
 		}
-		return frame, errors.New("invalid response received from google sheets")
+		return frame, backend.DownstreamError(errors.New("invalid response received from google sheets"))
 	}
 	sheet := &Spreadsheet{}
 	if err := json.Unmarshal([]byte(sheetsString), &sheet); err != nil {
-		backend.Logger.Error("error getting response for query", "error", "invalid response received from google sheets")
+		logger.Debug("error getting response for query", "error", "invalid response received from google sheets")
 		frame.Meta.Custom = &CustomMeta{
 			Query: query,
 			Error: "invalid response received from google sheets",
 		}
-		return frame, errors.New("invalid response received from google sheets")
+		return frame, backend.DownstreamError(errors.New("invalid response received from google sheets"))
 	}
 	if sheet != nil && len(sheet.Sheets) > 0 && len(sheet.Sheets[0].Data) > 0 {
 		parsedCSV := [][]string{}
@@ -79,29 +81,29 @@ func GetGoogleSheetsResponse(urlResponseObject interface{}, query querySrv.Query
 			header := parsedCSV[0]
 			framerOptions := gframer.FramerOptions{}
 			for idx, h := range header {
-				colum := gframer.ColumnSelector{Selector: h, Alias: h}
+				column := gframer.ColumnSelector{Selector: h, Alias: h}
 				newHeader := strings.TrimSpace(h)
 				if h == "" {
 					newHeader = fmt.Sprintf("Field %d", idx+1)
 					header[idx] = newHeader
-					colum.Selector = newHeader
-					colum.Alias = newHeader
+					column.Selector = newHeader
+					column.Alias = newHeader
 				}
 				for _, col := range query.Columns {
 					if col.Selector == strings.TrimSpace(newHeader) {
-						colum.Type = col.Type
-						colum.TimeFormat = col.TimeStampFormat
+						column.Type = col.Type
+						column.TimeFormat = col.TimeStampFormat
 						if col.Text != "" {
 							header[idx] = col.Text
-							colum.Alias = col.Text
+							column.Alias = col.Text
 						}
 					}
 				}
-				framerOptions.Columns = append(framerOptions.Columns, colum)
+				framerOptions.Columns = append(framerOptions.Columns, column)
 			}
-			out := []interface{}{}
+			out := []any{}
 			for _, row := range records {
-				item := map[string]interface{}{}
+				item := map[string]any{}
 				for colId, col := range header {
 					if colId < len(row) {
 						item[col] = row[colId]
@@ -109,6 +111,8 @@ func GetGoogleSheetsResponse(urlResponseObject interface{}, query querySrv.Query
 				}
 				out = append(out, item)
 			}
+			// We are not adding error source here as errors from ToDataFrame will be considered
+			// plugin errors, as the issue is with the plugin's handling of the data, not the data itself.
 			return gframer.ToDataFrame(out, framerOptions)
 		}
 	}

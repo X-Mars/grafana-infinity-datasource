@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Input } from '@grafana/ui';
-import { Stack } from '../../components/extended/Stack';
+import { Input, Stack } from '@grafana/ui';
 import { EditorRow } from '../../components/extended/EditorRow';
 import { EditorField } from '../../components/extended/EditorField';
 import { ComputedColumnsEditor } from './query.computedColumns';
@@ -18,8 +17,8 @@ export const ExperimentalFeatures = ({ query, onChange, onRunQuery }: Experiment
     return <></>;
   }
   return (
-    <EditorRow label="Computed columns, Filter, Group by" collapsible={true} collapsed={false} title={() => 'beta'}>
-      <Stack gap={0} direction="row" wrap={true}>
+    <EditorRow label="Computed columns, Filter, Group by" collapsible={true} collapsed={false} title={() => ''}>
+      <Stack gap={1} direction="row" wrap={'wrap'}>
         <ComputedColumnsEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />
         <Filter query={query} onChange={onChange} onRunQuery={onRunQuery} />
         <Summarize query={query} onChange={onChange} onRunQuery={onRunQuery} />
@@ -53,6 +52,7 @@ const Summarize = ({ query, onChange, onRunQuery }: ExperimentalFeaturesProps) =
   let isValid = true;
   const [summarizeExpression, setSummarizeExpression] = useState(isBackendQuery(query) ? query.summarizeExpression : '');
   const [summarizeBy, setSummarizeBy] = useState(isBackendQuery(query) ? query.summarizeBy : '');
+  const [summarizeAlias, setSummarizeAlias] = useState(isBackendQuery(query) ? query.summarizeAlias : '');
   if (!isBackendQuery(query)) {
     return <></>;
   }
@@ -82,6 +82,18 @@ const Summarize = ({ query, onChange, onRunQuery }: ExperimentalFeaturesProps) =
             onChange={(e) => setSummarizeBy(e.currentTarget.value)}
             onBlur={() => {
               onChange({ ...query, summarizeBy });
+              onRunQuery();
+            }}
+          />
+        </EditorField>
+        <EditorField label="Summarize Alias" optional={true} tooltip={'Alias'}>
+          <Input
+            width={50}
+            value={summarizeAlias || ''}
+            placeholder={'Example: total_salary'}
+            onChange={(e) => setSummarizeAlias(e.currentTarget.value)}
+            onBlur={() => {
+              onChange({ ...query, summarizeAlias });
               onRunQuery();
             }}
           />
