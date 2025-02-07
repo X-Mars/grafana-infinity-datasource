@@ -11,11 +11,13 @@ import { HelpLinks } from './../query.help';
 import { BasicOptions } from './query.options';
 import { UQLEditor } from './query.uql';
 import { URLEditor } from './query.url';
-import { InlineDataEditor } from './query.data';
 import { ExperimentalFeatures } from './query.experimental';
+import { AzureBlobEditor } from './query.azureBlob';
 import { isDataQuery } from './../../app/utils';
 import type { EditorMode, InfinityQuery } from './../../types';
 import { Datasource } from './../../datasource';
+import { PaginationEditor } from './query.pagination';
+import { TransformationsEditor } from './query.transformations';
 
 export type InfinityEditorProps = {
   query: InfinityQuery;
@@ -37,6 +39,7 @@ export const InfinityQueryEditor = (props: InfinityEditorProps) => {
     query.type !== 'series' &&
     query.type !== 'global' &&
     query.type !== 'google-sheets' &&
+    query.type !== 'transformations' &&
     !(query.type === 'json' && query.parser === 'backend') &&
     !(query.type === 'graphql' && query.parser === 'backend') &&
     !(query.type === 'csv' && query.parser === 'backend') &&
@@ -71,7 +74,7 @@ export const InfinityQueryEditor = (props: InfinityEditorProps) => {
         />
         {query.type === 'series' && <SeriesEditor {...{ query, onChange }} />}
         {isDataQuery(query) && query.source !== 'inline' && showUrlOptions && <URLEditor {...{ mode, query, onChange, onRunQuery }} />}
-        {isDataQuery(query) && query.source === 'inline' && <InlineDataEditor {...{ mode, query, onChange, onRunQuery }} />}
+        {isDataQuery(query) && query.source === 'azure-blob' && <AzureBlobEditor query={query} onChange={onChange} />}
         {canShowColumnsEditor && <QueryColumnsEditor {...{ mode, query, onChange, onRunQuery }} />}
         {canShowFilterEditor && <TableFilter {...{ query, onChange, onRunQuery }} />}
         {query.type === 'uql' && (
@@ -89,6 +92,8 @@ export const InfinityQueryEditor = (props: InfinityEditorProps) => {
         {(query.type === 'json' || query.type === 'graphql' || query.type === 'csv' || query.type === 'tsv' || query.type === 'xml') && query.parser === 'backend' && (
           <ExperimentalFeatures query={query} onChange={onChange} onRunQuery={onRunQuery} />
         )}
+        {query.type === 'json' && query.parser === 'backend' && query.source === 'url' && <PaginationEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />}
+        {query.type === 'transformations' && <TransformationsEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />}
       </EditorRows>
     </div>
   );

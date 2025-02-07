@@ -1,4 +1,3 @@
-import { cloneDeep } from 'lodash';
 import React, { useState } from 'react';
 import { isDataQuery, isBackendQuery } from './../app/utils';
 import { INFINITY_COLUMN_FORMATS } from './../constants';
@@ -20,50 +19,55 @@ export const QueryColumnItem = (props: QueryColumnItemProps) => {
     return <></>;
   }
   const onSelectorChange = () => {
-    const columns = cloneDeep(query.columns || []);
-    columns[index].selector = selector;
+    const columns = [...query.columns];
+    columns[index] = { ...columns[index], selector };
     onChange({ ...query, columns });
   };
   const onTextChange = () => {
-    const columns = cloneDeep(query.columns || []);
-    columns[index].text = text;
+    const columns = [...query.columns];
+    columns[index] = { ...columns[index], text };
     onChange({ ...query, columns });
   };
   const onTimeFormatChange = (timestampFormat: string) => {
-    const columns = cloneDeep(query.columns || []);
-    columns[index].timestampFormat = timestampFormat;
+    const columns = [...query.columns];
+    columns[index] = { ...columns[index], timestampFormat };
     onChange({ ...query, columns });
   };
   const onFormatChange = (type: InfinityColumnFormat) => {
-    const columns = cloneDeep(query.columns || []);
-    columns[index].type = type;
+    const columns = [...query.columns];
+    columns[index] = { ...columns[index], type };
     onChange({ ...query, columns });
   };
   return (
-    <>
+    <div style={{ display: 'flex' }}>
       <InlineFormLabel width={8}>{query.type === 'csv' ? 'Column Name' : 'Selector'}</InlineFormLabel>
-      <Input width={60} value={selector} placeholder={query.type === 'csv' ? 'Column Name' : 'Selector'} onChange={(e) => setSelector(e.currentTarget.value)} onBlur={onSelectorChange} />
+      <Input width={20} value={selector} placeholder={query.type === 'csv' ? 'Column Name' : 'Selector'} onChange={(e) => setSelector(e.currentTarget.value)} onBlur={onSelectorChange} />
       <InlineFormLabel width={2}>as</InlineFormLabel>
-      <Input value={text} width={30} placeholder="Title" onChange={(e) => setText(e.currentTarget.value)} onBlur={onTextChange}></Input>
+      <Input value={text} width={20} placeholder="Title" onChange={(e) => setText(e.currentTarget.value)} onBlur={onTextChange}></Input>
       <InlineFormLabel width={5}>format as</InlineFormLabel>
-      <Select width={30} value={column.type} options={INFINITY_COLUMN_FORMATS} onChange={(e) => onFormatChange(e.value as InfinityColumnFormat)} menuShouldPortal={true}></Select>
+      <Select width={24} value={column.type} options={INFINITY_COLUMN_FORMATS} onChange={(e) => onFormatChange(e.value as InfinityColumnFormat)} menuShouldPortal={true}></Select>
       {(isBackendQuery(query) || query.type === 'google-sheets') && column.type === 'timestamp' && (
         <>
-          <InlineFormLabel width={11} tooltip={'Timestamp format in golang layout. Example: 2006-01-02T15:04:05Z07:00'}>
-            Time Format (optional)
-          </InlineFormLabel>
+          <div style={{ marginLeft: '5px' }}>
+            <InlineFormLabel width={11} tooltip={'Timestamp format in golang layout. Example: 2006-01-02T15:04:05Z07:00'}>
+              Time Format (optional)
+            </InlineFormLabel>
+          </div>
           <Select
             width={30}
             value={column.timestampFormat}
             placeholder="Auto"
+            allowCustomValue={true}
             options={[
               { value: '', label: 'Auto' },
               { value: '2006-01-02T15:04:05Z07:00', label: 'Default ISO' },
               { value: '2006-01-02', label: 'YYYY-MM-DD' },
               { value: '2006/01/02', label: 'YYYY/MM/DD' },
               { value: '2006 / 01 / 02', label: 'YYYY / MM / DD' },
+              { value: '20060102', label: 'YYYYMMDD' },
               { value: '2006-01', label: 'YYYY-MM' },
               { value: '2006/01', label: 'YYYY/MM' },
+              { value: '200601', label: 'YYYYMM' },
               { value: '2006', label: 'YYYY' },
               { value: '2006/01/02 15:04', label: 'YYYY/MM/DD HH:mm' },
               { value: '2006/01/02 15:04:05', label: 'YYYY/MM/DD HH:mm:ss' },
@@ -87,6 +91,6 @@ export const QueryColumnItem = (props: QueryColumnItemProps) => {
           />
         </>
       )}
-    </>
+    </div>
   );
 };
