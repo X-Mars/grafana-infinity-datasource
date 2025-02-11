@@ -3,7 +3,7 @@ import { Select } from '@grafana/ui';
 import { SCRAP_QUERY_TYPES } from './../constants';
 import { EditorField } from './extended/EditorField';
 import type { EditorMode, InfinityQuery, InfinityQueryType } from './../types';
-import type { SelectableValue } from '@grafana/data/types';
+import type { SelectableValue } from '@grafana/data';
 
 export const TypeSelector = (props: { query: InfinityQuery; onChange: (e: InfinityQuery) => void; onRunQuery: () => void; mode: EditorMode }) => {
   const { query, mode, onChange, onRunQuery } = props;
@@ -24,7 +24,7 @@ export const TypeSelector = (props: { query: InfinityQuery; onChange: (e: Infini
     onRunQuery();
   };
   return (
-    <EditorField label="Type" tag={query.type === 'google-sheets' ? 'beta' : ''}>
+    <EditorField label="Type" tag={query.type === 'google-sheets' ? 'beta' : ''} horizontal={true}>
       <Select width={18} options={getTypes()} onChange={(e) => onTypeChange(e.value as InfinityQueryType)} value={query.type || 'json'} menuShouldPortal={true}></Select>
     </EditorField>
   );

@@ -8,41 +8,47 @@
   "metrics": true,
   "annotations": true,
   "alerting": true,
+  "logs": true,
+  "tracing": true,
   "info": {
     "version": "%VERSION%",
     "updated": "%TODAY%",
-    "description": "JSON API, CSV, XML, GraphQL, HTML, Google Sheets and REST API datasource for Grafana. Do infinite things with Grafana. Transform data with UQL/GROQ. Visualize data from many apis, RSS/ATOM feeds directly",
+    "description": "JSON API, CSV, TSV, XML, GraphQL, HTML, Google Sheets and HTTP/REST API datasource for Grafana. Do infinite things with Grafana. Transform data with UQL/GROQ. Visualize data from many apis including Amazon AWS, Microsoft Azure, Google Cloud / GCP and RSS/ATOM feeds directly. Also support visualizing logs and traces.",
     "author": {
-      "name": "Sriramajeyam Sugumaran",
-      "url": "https://www.google.com/search?q=Sriramajeyam+Sugumaran"
+      "name": "Grafana Labs",
+      "url": "https://grafana.com"
     },
     "logos": {
       "small": "img/icon.svg",
       "large": "img/icon.svg"
     },
     "keywords": [
-      "grafana",
-      "json",
-      "csv",
-      "xml",
-      "html",
-      "graphql",
-      "uql",
-      "groq",
-      "transformations",
-      "simple-json",
-      "url",
-      "inline",
-      "random walk",
-      "scraping",
-      "node graph",
-      "json api",
-      "rest api",
-      "soap",
       "atom",
-      "rss",
+      "aws",
+      "azure",
+      "csv",
       "feed",
-      "rss feed"
+      "gcp",
+      "google cloud",
+      "grafana",
+      "graphql",
+      "groq",
+      "html",
+      "inline",
+      "json api",
+      "json",
+      "node graph",
+      "random walk",
+      "rest api",
+      "rss feed",
+      "rss",
+      "scraping",
+      "simple-json",
+      "soap",
+      "transformations",
+      "uql",
+      "url",
+      "xml"
     ],
     "screenshots": [
       {
@@ -64,30 +70,30 @@
     ],
     "links": [
       {
-        "name": "Wiki",
-        "url": "https://yesoreyeram.github.io/grafana-infinity-datasource"
+        "name": "Docs",
+        "url": "https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource"
       },
       {
         "name": "Github",
-        "url": "https://github.com/yesoreyeram/grafana-infinity-datasource"
+        "url": "https://github.com/grafana/grafana-infinity-datasource"
       },
       {
         "name": "Need Help?",
-        "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/discussions/categories/q-a"
+        "url": "https://github.com/grafana/grafana-infinity-datasource/discussions/categories/q-a"
       },
       {
         "name": "Report Bug",
-        "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/issues/new/choose"
+        "url": "https://github.com/grafana/grafana-infinity-datasource/issues/new/choose"
       },
       {
         "name": "Examples",
-        "url": "https://github.com/yesoreyeram/grafana-infinity-datasource/discussions/categories/show-and-tell"
+        "url": "https://github.com/grafana/grafana-infinity-datasource/discussions/categories/show-and-tell"
       }
     ]
   },
   "dependencies": {
-    "grafanaDependency": ">=8.4.7",
-    "grafanaVersion": "8.4.7",
+    "grafanaDependency": ">=10.4.8",
+    "grafanaVersion": "10.4.x",
     "plugins": []
   },
   "includes": [],

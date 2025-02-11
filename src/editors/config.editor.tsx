@@ -1,103 +1,233 @@
-import { Collapse, InlineFormLabel, Input, LinkButton } from '@grafana/ui';
-import defaultsDeep from 'lodash/defaultsDeep';
 import React, { useState } from 'react';
+import defaultsDeep from 'lodash/defaultsDeep';
+import { css } from '@emotion/css';
+import { InlineFormLabel, Input, Button, LinkButton, useTheme2, Collapse as CollapseOriginal } from '@grafana/ui';
 import { SecureFieldsEditor } from './../components/config/SecureFieldsEditor';
 import { AuthEditor } from './config/Auth';
+import { ProxyEditor } from './config/ProxyEditor';
+import { AllowedHostsEditor } from './config/AllowedHosts';
+import { SecurityConfigEditor } from './config/SecurityConfigEditor';
 import { GlobalQueryEditor } from './config/GlobalQueryEditor';
 import { ProvisioningScript } from './config/Provisioning';
 import { TLSConfigEditor } from './config/TLSConfigEditor';
 import { URLEditor } from './config/URL';
-import { OpenAPIEditor } from './config/OpenAPI';
 import { ReferenceDataEditor } from './config/ReferenceData';
+import { CustomHealthCheckEditor } from './config/CustomHealthCheckEditor';
+import type { DataSourcePluginOptionsEditorProps } from '@grafana/data';
 import type { InfinityOptions } from './../types';
-import type { DataSourcePluginOptionsEditorProps } from '@grafana/data/types';
+import { QueryParamEditor } from './config/QueryParamEditor';
 
-export const InfinityConfigEditor = (props: DataSourcePluginOptionsEditorProps<InfinityOptions>) => {
+const Collapse = CollapseOriginal as any;
+
+export const MainEditor = (
+  props: DataSourcePluginOptionsEditorProps<InfinityOptions> & {
+    setActiveTab: React.Dispatch<React.SetStateAction<string>>;
+  }
+) => {
+  const { setActiveTab, options } = props;
+  const theme = useTheme2();
+  return (
+    <div
+      style={{
+        backgroundImage: theme.isDark ? 'url(/public/plugins/yesoreyeram-infinity-datasource/img/homepage-bg.svg)' : '',
+        backgroundColor: theme.isDark ? 'rgba(0,0,0,0.3)' : '',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'cover',
+        padding: '30px',
+        marginBottom: '30px',
+        color: theme.isDark ? '#d9d9d9' : '',
+      }}
+    >
+      <h1>👋 Welcome to Grafana Infinity Data Source!</h1>
+      <p style={{ marginBlockStart: 5 }}>
+        <b>Without any additional configuration, this datasource can work.</b> Optionally, configure any of the settings you see in the left side such as Authentication if you needed.
+      </p>
+      <div style={{ marginBlockStart: 5 }}>
+        <Button icon="lock" variant="primary" fill="outline" size="md" onClick={() => setActiveTab('auth')} style={{ marginInlineEnd: '5px', color: theme.isDark ? '#d9d9d9' : '' }}>
+          Setup Authentication
+        </Button>
+        <LinkButton
+          icon="document-info"
+          variant="secondary"
+          size="md"
+          target="_blank"
+          href="https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource"
+          rel="noreferrer"
+          style={{ marginInlineEnd: '5px', color: theme.isDark ? '#d9d9d9' : '' }}
+        >
+          Documentation
+        </LinkButton>
+        <LinkButton
+          icon="star"
+          variant="secondary"
+          size="md"
+          target="_blank"
+          href="https://github.com/grafana/grafana-infinity-datasource"
+          rel="noreferrer"
+          style={{ marginInlineEnd: '5px', color: theme.isDark ? '#d9d9d9' : '' }}
+        >
+          Star in Github
+        </LinkButton>
+        <ProvisioningScript options={options} />
+      </div>
+    </div>
+  );
+};
+
+export const HeadersEditor = (props: DataSourcePluginOptionsEditorProps<InfinityOptions>) => {
   const { options, onOptionsChange } = props;
-  const [miscOpen, setMiscOpen] = useState(false);
-  const [tlsOpen, setTlsOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(true);
-  const [headersOpen, setHeadersOpen] = useState(false);
-  const [queriesOpen, setQueriesOpen] = useState(false);
-  const [globalsOpen, setGlobalsOpen] = useState(false);
-  const [referenceDataOpen, setReferenceDataOpen] = useState(false);
-  const [experimentalOpen, setExperimentalOpen] = useState(false);
-  options.jsonData = defaultsDeep(options.jsonData, {
-    global_queries: [],
-  });
+  return (
+    <>
+      <Collapse isOpen={true} collapsible={true} label="Base URL">
+        <URLEditor options={options} onOptionsChange={onOptionsChange} />
+      </Collapse>
+      <Collapse isOpen={true} collapsible={true} label="Custom HTTP Headers">
+        <SecureFieldsEditor dataSourceConfig={options} onChange={onOptionsChange} title="Custom HTTP Header" secureFieldName="httpHeaderName" secureFieldValue="httpHeaderValue" hideTile={true} />
+      </Collapse>
+      <Collapse isOpen={true} collapsible={true} label="URL Query Param">
+        <SecureFieldsEditor dataSourceConfig={options} onChange={onOptionsChange} title="URL Query Param" secureFieldName="secureQueryName" secureFieldValue="secureQueryValue" hideTile={true} />
+      </Collapse>
+      <Collapse isOpen={true} collapsible={true} label="Query Param Encoding (EXPERIMENTAL)">
+        <QueryParamEditor options={options} onOptionsChange={onOptionsChange} />
+      </Collapse>
+    </>
+  );
+};
+
+export const NetworkEditor = (props: DataSourcePluginOptionsEditorProps<InfinityOptions>) => {
+  const { options, onOptionsChange } = props;
   const [timeoutInSeconds, setTimeoutInSeconds] = useState(options.jsonData.timeoutInSeconds || 60);
   return (
     <>
-      <Collapse label="Authentication" isOpen={authOpen} collapsible={true} onToggle={(e) => setAuthOpen(!authOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <AuthEditor options={options} onOptionsChange={onOptionsChange} />
+      <div style={{ padding: '1px 10px' }}>
+        <div className="gf-form">
+          <InlineFormLabel>Timeout in seconds</InlineFormLabel>
+          <Input
+            value={timeoutInSeconds}
+            type="number"
+            placeholder="timeout in seconds"
+            min={0}
+            max={300}
+            onChange={(e: any) => setTimeoutInSeconds(e.currentTarget.valueAsNumber)}
+            onBlur={() => {
+              props.onOptionsChange({ ...options, jsonData: { ...options.jsonData, timeoutInSeconds } });
+            }}
+          ></Input>
         </div>
-      </Collapse>
-      <Collapse label="Headers" isOpen={headersOpen} collapsible={true} onToggle={(e) => setHeadersOpen(!headersOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <SecureFieldsEditor dataSourceConfig={options} onChange={onOptionsChange} title="Custom HTTP Header" hideTile={true} secureFieldName="httpHeaderName" secureFieldValue="httpHeaderValue" />
+      </div>
+      <div style={{ padding: '1px 10px' }}>
+        <TLSConfigEditor options={options} onOptionsChange={onOptionsChange} hideTile={true} />
+        <ProxyEditor options={options} onOptionsChange={onOptionsChange} />
+      </div>
+    </>
+  );
+};
+
+export const SecurityEditor = (props: DataSourcePluginOptionsEditorProps<InfinityOptions>) => {
+  const { options, onOptionsChange } = props;
+  return (
+    <>
+      <AllowedHostsEditor options={options} onOptionsChange={onOptionsChange} />
+      <SecurityConfigEditor options={options} onOptionsChange={onOptionsChange} />
+    </>
+  );
+};
+
+const config_sections: Array<{ value: string; label: string }> = [
+  { value: 'main', label: 'Main' },
+  { value: 'auth', label: 'Authentication' },
+  { value: 'headers_and_params', label: 'URL, Headers & Params' },
+  { value: 'network', label: 'Network' },
+  { value: 'security', label: 'Security' },
+  { value: 'health_check', label: 'Health check' },
+  { value: 'reference_data', label: 'Reference data' },
+  { value: 'global_queries', label: 'Global queries' },
+];
+
+export const InfinityConfigEditor = (props: DataSourcePluginOptionsEditorProps<InfinityOptions>) => {
+  const theme = useTheme2();
+  const { options, onOptionsChange } = props;
+  options.jsonData = defaultsDeep(options.jsonData, { global_queries: [] });
+  const [activeTab, setActiveTab] = useState(options.jsonData.auth_method ? 'auth' : 'main');
+  const styles = {
+    root: css`
+      display: flex;
+      margin-block-start: -20px;
+      margin-block-end: ${theme.spacing('20px')};
+      min-height: 300px;
+    `,
+    tabs: css`
+      width: ${theme.spacing('240px')};
+    `,
+    tab: css`
+      position: relative;
+      cursor: pointer;
+      padding: 8px;
+      padding-left: 14px;
+      display: block;
+      opacity: 0.8;
+      &:hover {
+        background: ${theme.colors.background.secondary};
+        opacity: 1;
+      }
+    `,
+    tab_active: css`
+      position: relative;
+      cursor: pointer;
+      padding: 8px;
+      padding-left: 14px;
+      display: block;
+      background: ${theme.colors.background.secondary};
+      opacity: 1;
+      &::before {
+        display: block;
+        content: ' ';
+        position: absolute;
+        left: 0;
+        width: 4px;
+        bottom: 2px;
+        top: 2px;
+        background-image: linear-gradient(0deg, #f05a28 30%, #fbca0a 99%);
+      }
+    `,
+    tabContent: css`
+      flex-grow: 1;
+      padding-inline-start: ${theme.spacing('20px')};
+      border-left: 1px solid ${theme.colors.border.medium};
+    `,
+  };
+  return (
+    <>
+      <div className={styles.root}>
+        <div className={styles.tabs}>
+          {config_sections.map((tab) => (
+            <div key={tab.value} className={activeTab === tab.value ? styles.tab_active : styles.tab} onClick={() => setActiveTab(tab.value)}>
+              {tab.label}
+            </div>
+          ))}
         </div>
-      </Collapse>
-      <Collapse label="URL params" isOpen={queriesOpen} collapsible={true} onToggle={(e) => setQueriesOpen(!queriesOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <SecureFieldsEditor dataSourceConfig={options} onChange={onOptionsChange} title="URL Query Param" hideTile={true} secureFieldName="secureQueryName" secureFieldValue="secureQueryValue" />
+        <div style={{ flexGrow: 1, paddingInlineStart: '20px', borderLeft: `1px solid ${theme.colors.border.medium}` }}>
+          {activeTab === 'main' ? (
+            <MainEditor options={options} onOptionsChange={onOptionsChange} setActiveTab={setActiveTab} />
+          ) : activeTab === 'auth' ? (
+            <AuthEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'headers_and_params' ? (
+            <HeadersEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'network' ? (
+            <NetworkEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'security' ? (
+            <SecurityEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'global_queries' ? (
+            <GlobalQueryEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'reference_data' ? (
+            <ReferenceDataEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : activeTab === 'health_check' ? (
+            <CustomHealthCheckEditor options={options} onOptionsChange={onOptionsChange} />
+          ) : (
+            <AuthEditor options={options} onOptionsChange={onOptionsChange} />
+          )}
         </div>
-      </Collapse>
-      <Collapse label="TLS/SSL &amp; Network Settings" isOpen={tlsOpen} collapsible={true} onToggle={(e) => setTlsOpen(!tlsOpen)}>
-        <div style={{ padding: '1px 10px' }}>
-          <div className="gf-form">
-            <InlineFormLabel>Timeout in seconds</InlineFormLabel>
-            <Input
-              value={timeoutInSeconds}
-              type="number"
-              placeholder="timeout in seconds"
-              min={0}
-              max={300}
-              onChange={(e) => setTimeoutInSeconds(e.currentTarget.valueAsNumber)}
-              onBlur={() => {
-                props.onOptionsChange({ ...options, jsonData: { ...options.jsonData, timeoutInSeconds } });
-              }}
-            ></Input>
-          </div>
-        </div>
-        <div style={{ padding: '1px 10px' }}>
-          <TLSConfigEditor options={options} onOptionsChange={onOptionsChange} hideTile={true} />
-        </div>
-      </Collapse>
-      <Collapse label="Global Queries" isOpen={globalsOpen} collapsible={true} onToggle={(e) => setGlobalsOpen(!globalsOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <GlobalQueryEditor options={options} onOptionsChange={onOptionsChange} />
-        </div>
-      </Collapse>
-      <Collapse label="Misc" isOpen={miscOpen} collapsible={true} onToggle={(e) => setMiscOpen(!miscOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <URLEditor options={options} onOptionsChange={onOptionsChange} />
-        </div>
-      </Collapse>
-      <Collapse label="Reference Data" isOpen={referenceDataOpen} collapsible={true} onToggle={(e) => setReferenceDataOpen(!referenceDataOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <ReferenceDataEditor options={options} onOptionsChange={onOptionsChange} />
-        </div>
-      </Collapse>
-      <Collapse label="Experimental" isOpen={experimentalOpen} collapsible={true} onToggle={(e) => setExperimentalOpen(!experimentalOpen)}>
-        <div style={{ padding: '0px 10px' }}>
-          <OpenAPIEditor options={options} onOptionsChange={onOptionsChange} />
-        </div>
-      </Collapse>
-      <Collapse label="More" isOpen={true} collapsible={true}>
-        <p style={{ marginInline: '30px', marginBlock: '15px', textAlign: 'center' }}>
-          <p>
-            <b>Without any additional configuration, this datasource can work.</b> Optionally, configure any of the above settings if you needed.
-          </p>
-          <LinkButton variant="secondary" size="md" target="_blank" href="https://yesoreyeram.github.io/grafana-infinity-datasource" rel="noreferrer" style={{ marginInlineEnd: '5px' }}>
-            Click here plugin documentation website
-          </LinkButton>
-          <LinkButton variant="secondary" size="md" target="_blank" href="https://github.com/yesoreyeram/grafana-infinity-datasource" rel="noreferrer" style={{ marginInlineEnd: '5px' }}>
-            Give us a star in Github
-          </LinkButton>
-          <ProvisioningScript options={options} />
-        </p>
-      </Collapse>
+      </div>
     </>
   );
 };

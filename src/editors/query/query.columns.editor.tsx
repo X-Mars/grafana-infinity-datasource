@@ -1,16 +1,13 @@
 import React, { useState } from 'react';
-import { Button, TextArea } from '@grafana/ui';
-import { cloneDeep } from 'lodash';
+import { Button, TextArea, Stack } from '@grafana/ui';
 import { EditorRow } from './../../components/extended/EditorRow';
 import { EditorField } from './../../components/extended/EditorField';
-import { Stack } from './../../components/extended/Stack';
 import { isBackendQuery, isDataQuery } from './../../app/utils';
 import { QueryColumnItem } from './../../components/QueryColumnItem';
 import { JSONOptionsEditor } from '../../components/JSONOptionsEditor';
 import { CSVOptionsEditor } from '../../components/CSVOptionsEditor';
 import { UQLEditor } from './query.uql';
 import { GROQEditor } from './query.groq';
-import { SQLiteEditor } from './query.sqlite';
 import type { InfinityColumn, InfinityQuery } from './../../types';
 
 export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (value: any) => void; onRunQuery: () => void }) => {
@@ -19,16 +16,12 @@ export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (val
     return <></>;
   }
   const onColumnAdd = () => {
-    const columns = cloneDeep(query.columns || []);
-    const defaultColumn = {
-      text: '',
-      selector: '',
-      type: 'string',
-    };
+    let columns = [...(query.columns || [])];
+    const defaultColumn = { text: '', selector: '', type: 'string' };
     onChange({ ...query, columns: [...columns, defaultColumn] });
   };
   const onColumnRemove = (index: number) => {
-    const columns = cloneDeep(query.columns || []);
+    let columns = [...(query.columns || [])];
     columns.splice(index, 1);
     onChange({ ...query, columns });
   };
@@ -39,8 +32,8 @@ export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (val
           (query.type === 'json' || query.type === 'graphql' || query.type === 'csv' || query.type === 'tsv' || query.type === 'xml') && query.parser === 'uql'
             ? 'UQL'
             : (query.type === 'json' || query.type === 'graphql' || query.type === 'csv' || query.type === 'tsv') && query.parser === 'groq'
-            ? 'GROQ'
-            : 'Parsing options & Result fields'
+              ? 'GROQ'
+              : 'Parsing options & Result fields'
         }
         collapsible={true}
         collapsed={false}
@@ -54,9 +47,6 @@ export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (val
               if (query.parser === 'groq') {
                 return 'GROQ Query';
               }
-              if (query.parser === 'sqlite') {
-                return 'SQLite Query';
-              }
               return `Field types, alias and selectors`;
             default:
               return 'Field types and alias';
@@ -67,8 +57,6 @@ export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (val
           <UQLEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />
         ) : (query.type === 'json' || query.type === 'graphql') && query.parser === 'groq' ? (
           <GROQEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />
-        ) : query.type === 'json' && query.parser === 'sqlite' ? (
-          <SQLiteEditor query={query} onChange={onChange} onRunQuery={onRunQuery} />
         ) : (
           <>
             <Stack direction="column">
@@ -87,6 +75,7 @@ export const QueryColumnsEditor = (props: { query: InfinityQuery; onChange: (val
                           className="btn btn-danger btn-small"
                           icon="trash-alt"
                           variant="destructive"
+                          fill="outline"
                           size="sm"
                           style={{ margin: '5px' }}
                           onClick={(e) => {

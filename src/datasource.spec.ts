@@ -1,10 +1,10 @@
-import { PluginType } from '@grafana/data';
+import { PluginType, DataSourceInstanceSettings } from '@grafana/data';
 import { DataSourceWithBackend } from '@grafana/runtime';
 import { Datasource } from './datasource';
-import type { DataSourceInstanceSettings } from '@grafana/data/types';
 
 jest.mock('@grafana/runtime', () => ({
   ...(jest.requireActual('@grafana/runtime') as unknown as object),
+  reportInteraction: () => {},
   getTemplateSrv: () => {
     return {
       replace: (s: string) => s,
@@ -18,6 +18,7 @@ const DummyDatasource: DataSourceInstanceSettings = {
   name: '',
   access: 'proxy',
   type: 'yesoreyeram-infinity-datasource',
+  readOnly: true,
   meta: {
     id: '',
     name: '',
@@ -73,10 +74,29 @@ describe('metricFindQuery', () => {
 });
 
 describe('testDatasource', () => {
-  beforeEach(() => jest.spyOn(DataSourceWithBackend.prototype, 'testDatasource').mockResolvedValue({ message: 'OK' }));
-  it('should not throw error when allowed hosts configured', async () => {
+  beforeEach(() => jest.spyOn(DataSourceWithBackend.prototype, 'testDatasource').mockResolvedValue({ message: 'OK', status: 'success' }));
+  it('should pass with the default settings', async () => {
+    const ds = new Datasource({ ...DummyDatasource });
+    const result = await ds.testDatasource();
+    expect(result).toStrictEqual({
+      status: 'success',
+      message: 'OK. Settings saved',
+    });
+  });
+  it('should warn when no health check configured', async () => {
     const ds = new Datasource({ ...DummyDatasource, jsonData: { auth_method: 'apiKey', allowedHosts: ['foo'] } });
     const result = await ds.testDatasource();
-    expect(result).toStrictEqual({ status: 'success', message: 'OK. Settings saved' });
+    expect(result).toStrictEqual({
+      status: 'warning',
+      message: 'Success. Settings saved but no health checks performed. To validate the connection/credentials, you have to provide a sample URL in Health Check section',
+    });
+  });
+  it('should pass when health check and allowed hosts configured', async () => {
+    const ds = new Datasource({ ...DummyDatasource, jsonData: { auth_method: 'apiKey', allowedHosts: ['foo'], customHealthCheckEnabled: true, customHealthCheckUrl: 'https://foo.com' } });
+    const result = await ds.testDatasource();
+    expect(result).toStrictEqual({
+      status: 'success',
+      message: 'OK. Settings saved',
+    });
   });
 });

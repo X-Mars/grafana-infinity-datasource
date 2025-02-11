@@ -1,6 +1,15 @@
-import { ArrayVector, MutableDataFrame, FieldType } from '@grafana/data';
-import type { InfinityCSVQuery, InfinityGraphQLQuery, InfinityHTMLQuery, InfinityJSONQuery, InfinityQuery, InfinityQueryWithDataSource, InfinityXMLQuery } from './../types';
-import type { DataFrame, Field, Labels, TableData } from '@grafana/data/types';
+import { ArrayVector, MutableDataFrame, FieldType, DataFrame, Field, Labels, TableData } from '@grafana/data';
+import type {
+  InfinityCSVQuery,
+  InfinityGraphQLQuery,
+  InfinityHTMLQuery,
+  InfinityJSONQuery,
+  InfinityQuery,
+  InfinityQueryWithDataSource,
+  InfinityQueryWithURLSource,
+  InfinityXMLQuery,
+  InfinityQueryType,
+} from './../types';
 
 export const isTableData = (res: any): res is TableData => res && res.columns;
 export const isDataFrame = (res: any): res is DataFrame => res && res.fields;
@@ -17,20 +26,8 @@ export const isBackendQuerySupported = (
 export const isBackendQuery = (
   query: InfinityQuery
 ): query is Extract<InfinityQuery, ({ type: 'json' } | { type: 'csv' } | { type: 'tsv' } | { type: 'xml' } | { type: 'graphql' } | { type: 'html' }) & { parser: 'backend' }> =>
-  isBackendQuerySupported(query) && query.parser === 'backend';
+  query.type === 'transformations' || (isBackendQuerySupported(query) && query.parser === 'backend');
 
-export const normalizeURL = (url: string): string => {
-  if (url.startsWith('https://github.com')) {
-    return url
-      .replace('https://github.com', 'https://raw.githubusercontent.com')
-      .split('/')
-      .filter((item, index) => {
-        return !(item === 'blob' && index === 5);
-      })
-      .join('/');
-  }
-  return url;
-};
 export const isDataQuery = (query: InfinityQuery): query is InfinityQueryWithDataSource<any> => {
   switch (query.type) {
     case 'csv':
@@ -45,6 +42,24 @@ export const isDataQuery = (query: InfinityQuery): query is InfinityQueryWithDat
     default:
       return false;
   }
+};
+
+// We have to have query: unknown here as InfinityQuery and InfinityQueryWithURLSource<InfinityQueryType> are not compatible according to TypeScript
+export const isInfinityQueryWithUrlSource = (query: unknown): query is InfinityQueryWithURLSource<InfinityQueryType> => {
+  // We do a basic check to ensure that query is an object and has a type property
+  if (!query || typeof query !== 'object' || !('type' in query)) {
+    return false;
+  }
+
+  // we check if the query is a data query or has suitable type
+  if (isDataQuery(query as InfinityQuery) || query.type === 'uql' || query.type === 'groq') {
+    // It needs to have a source property and it should be 'url'
+    if ('source' in query) {
+      return query.source === 'url';
+    }
+  }
+
+  return false;
 };
 export const toTimeSeriesLong = (data: DataFrame[]): DataFrame[] => {
   if (!Array.isArray(data) || data.length === 0) {

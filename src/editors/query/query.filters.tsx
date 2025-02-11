@@ -6,7 +6,7 @@ import { filterOperators } from './../../app/parsers/filter';
 import { isDataQuery } from './../../app/utils';
 import { FilterOperator } from './../../constants';
 import type { InfinityFilter, InfinityQuery } from './../../types';
-import type { SelectableValue } from '@grafana/data/types';
+import type { SelectableValue } from '@grafana/data';
 
 export const TableFilter = (props: { query: InfinityQuery; onChange: (value: any) => void; onRunQuery: any }) => {
   const { query, onChange } = props;
@@ -38,18 +38,18 @@ export const TableFilter = (props: { query: InfinityQuery; onChange: (value: any
   };
   const onFilterFieldChange = (index: number, v: SelectableValue) => {
     const filters = [...(query.filters || [])];
-    filters[index].field = v.value;
+    filters[index] = { ...filters[index], field: v.value };
     onChange({ ...query, filters });
   };
   const onFilterOperatorChange = (index: number, v: SelectableValue) => {
-    query.filters = query.filters || [];
-    query.filters[index].operator = v.value;
-    onChange(query);
+    const filters = [...(query.filters || [])];
+    filters[index] = { ...filters[index], operator: v.value };
+    onChange({ ...query, filters });
   };
   const onFilterValueChange = (index: number, valueIndex: number, v: string) => {
-    query.filters = query.filters || [];
-    query.filters[index].value[valueIndex] = v;
-    onChange(query);
+    const filters = [...(query.filters || [])];
+    filters[index] = { ...filters[index], value: filters[index].value.map((val, i) => (i === valueIndex ? v : val)) };
+    onChange({ ...query, filters });
   };
   return (
     <EditorRow label="Results Filter" collapsible={true} collapsed={false} title={() => `${(query?.filters || [])?.length} Filters. Try backend/UQL filter instead.`}>
@@ -83,15 +83,7 @@ export const TableFilter = (props: { query: InfinityQuery; onChange: (value: any
                     onChange={(e) => onFilterValueChange(index, 0, e.target.value)}
                     placeholder="Value"
                   ></input>
-                  <span
-                    className="btn btn-danger btn-small"
-                    style={{ margin: '5px' }}
-                    onClick={() => {
-                      removeFilter(index);
-                    }}
-                  >
-                    x
-                  </span>
+                  <Button variant="destructive" size="sm" style={{ marginTop: '4px' }} onClick={() => removeFilter(index)} icon="trash-alt" fill="outline"></Button>
                   <br />
                 </div>
               ))}

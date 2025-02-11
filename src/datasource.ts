@@ -1,5 +1,5 @@
-import { LoadingState, toDataFrame } from '@grafana/data';
-import { DataSourceWithBackend } from '@grafana/runtime';
+import { LoadingState, toDataFrame, DataFrame, DataQueryRequest, DataQueryResponse, ScopedVars, TimeRange } from '@grafana/data';
+import { DataSourceWithBackend, HealthStatus } from '@grafana/runtime';
 import { flatten, sample } from 'lodash';
 import { Observable } from 'rxjs';
 import { applyGroq } from './app/GROQProvider';
@@ -11,9 +11,9 @@ import { getTemplateVariablesFromResult, LegacyVariableProvider, migrateLegacyQu
 import { AnnotationsEditor } from './editors/annotation.editor';
 import { interpolateQuery, interpolateVariableQuery } from './interpolate';
 import { migrateQuery } from './migrate';
-import { isBackendQuery, isDataQuery, normalizeURL } from './app/utils';
+import { isBackendQuery } from './app/utils';
+import { /*reportQuery,*/ reportHealthCheck } from './utils/analytics';
 import type { InfinityInstanceSettings, InfinityOptions, InfinityQuery, MetricFindValue, VariableQuery } from './types';
-import type { DataFrame, DataQueryRequest, DataQueryResponse, ScopedVars, TimeRange } from '@grafana/data/types';
 
 export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOptions> {
   constructor(public instanceSettings: InfinityInstanceSettings) {
@@ -25,6 +25,8 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
   query(options: DataQueryRequest<InfinityQuery>): Observable<DataQueryResponse> {
     return new Observable<DataQueryResponse>((subscriber) => {
       let request = getUpdatedDataRequest(options, this.instanceSettings);
+      // TODO: Remove or change this to be fired less often
+      // reportQuery(request?.targets || [], this.instanceSettings, this.meta, request?.app);
       super
         .query(request)
         .toPromise()
@@ -41,18 +43,9 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
   interpolateVariablesInQueries(queries: InfinityQuery[], scopedVars: ScopedVars) {
     return interpolateVariablesInQueries(queries, scopedVars);
   }
-  metricFindQuery(originalQuery: VariableQuery): Promise<MetricFindValue[]> {
+  metricFindQuery(originalQuery: VariableQuery, options?: { scopedVars: ScopedVars }): Promise<MetricFindValue[]> {
     let query = migrateLegacyQuery(originalQuery);
     query = interpolateVariableQuery(query);
-    if (query.queryType === 'infinity' && isDataQuery(query.infinityQuery) && query.infinityQuery.source === 'url') {
-      query = {
-        ...query,
-        infinityQuery: {
-          ...query.infinityQuery,
-          url: normalizeURL(query.infinityQuery.url),
-        },
-      };
-    }
     return new Promise((resolve) => {
       switch (query.queryType) {
         case 'random':
@@ -67,14 +60,14 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
         case 'infinity':
           if (query.infinityQuery) {
             let updatedQuery = migrateQuery(query.infinityQuery);
-            const request = { targets: [interpolateQuery(updatedQuery, {})] } as DataQueryRequest<InfinityQuery>;
+            const request = { targets: [interpolateQuery(updatedQuery, options?.scopedVars || {})] } as DataQueryRequest<InfinityQuery>;
             super
               .query(request)
               .toPromise()
               .then((res) => {
                 this.getResults(request, res)
                   .then((r) => {
-                    if (r && r.data && r.data) {
+                    if (r?.data) {
                       resolve(getTemplateVariablesFromResult(r.data[0]) as MetricFindValue[]);
                     } else {
                       resolve([]);
@@ -106,14 +99,27 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
     return super
       .testDatasource()
       .then((o) => {
+        reportHealthCheck(o, this.instanceSettings, this.meta);
         switch (o?.message) {
           case 'OK':
+            if (this.instanceSettings?.jsonData?.auth_method === 'azureBlob' || this.instanceSettings?.jsonData?.auth_method === 'aws') {
+              return Promise.resolve({ status: 'success', message: 'OK. Settings saved' });
+            }
+            if (!(this.instanceSettings?.jsonData?.customHealthCheckEnabled && this.instanceSettings?.jsonData?.customHealthCheckUrl) && this.instanceSettings?.jsonData?.auth_method) {
+              const healthCheckMessage = [
+                'Success',
+                'Settings saved but no health checks performed',
+                'To validate the connection/credentials, you have to provide a sample URL in Health Check section',
+              ].join(`. `);
+              return Promise.resolve({ status: 'warning', message: healthCheckMessage });
+            }
             return Promise.resolve({ status: 'success', message: 'OK. Settings saved' });
           default:
             return Promise.resolve({ status: o?.status || 'success', message: o?.message || 'Settings saved' });
         }
       })
       .catch((ex) => {
+        reportHealthCheck({ status: HealthStatus.Error, message: ex }, this.instanceSettings, this.meta);
         return Promise.resolve({ status: 'error', message: ex.message });
       });
   }
@@ -132,9 +138,12 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
     }
     return true;
   }
-  private getResults(options: DataQueryRequest<InfinityQuery>, result: DataQueryResponse): Promise<DataQueryResponse> {
+  private getResults(options: DataQueryRequest<InfinityQuery>, result?: DataQueryResponse): Promise<DataQueryResponse> {
+    if (!result) {
+      return Promise.resolve({ data: [], error: new Error('error getting the results. check grafana logs for more details'), state: LoadingState.Error });
+    }
     if (result && result.error) {
-      return Promise.resolve({ data: result?.data, error: result.error || 'error while getting the results. Refer grafana logs for more details', state: LoadingState.Error });
+      return Promise.resolve({ data: result?.data, error: result.error || new Error('error while getting the results. Refer grafana logs for more details'), state: LoadingState.Error });
     }
     const promises: Array<Promise<DataFrame>> = [];
     if (result && result.data) {
@@ -147,7 +156,7 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
           promises.push(Promise.resolve(d));
         } else if (target.type === 'google-sheets') {
           promises.push(Promise.resolve(d));
-        } else if (target.type === 'json' && target.parser === 'sqlite') {
+        } else if (target.type === 'transformations') {
           promises.push(Promise.resolve(d));
         } else {
           promises.push(
@@ -159,7 +168,27 @@ export class Datasource extends DataSourceWithBackend<InfinityQuery, InfinityOpt
                 target.format !== 'timeseries'
               ) {
                 const df = toDataFrame(r);
-                let frame = { ...df, meta: d.meta, refId: target.refId };
+                let frame = { ...df, meta: d.meta || {}, refId: target.refId };
+                if (target.format === 'logs') {
+                  let doesTimeFieldExist = false;
+                  let doesBodyFieldExist = false;
+                  (df.fields || []).forEach((f) => {
+                    if (f.name === 'timestamp' && f.type === 'time') {
+                      doesTimeFieldExist = true;
+                    }
+                    if (f.name === 'body' && f.type === 'string') {
+                      doesBodyFieldExist = true;
+                    }
+                  });
+                  if (doesBodyFieldExist && doesTimeFieldExist) {
+                    frame.meta.type = 'log-lines';
+                    frame.meta.typeVersion = [0, 0];
+                  }
+                  frame.meta.preferredVisualisationType = 'logs';
+                }
+                if (target.format === 'trace') {
+                  frame.meta.preferredVisualisationType = 'trace';
+                }
                 if (error || (responseCodeFromServer && responseCodeFromServer >= 400)) {
                   frame.meta.notices = [
                     {

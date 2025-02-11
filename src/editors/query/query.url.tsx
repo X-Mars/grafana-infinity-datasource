@@ -1,20 +1,17 @@
-import React, { useState } from 'react';
-import { css } from '@emotion/css';
-import { GrafanaTheme2 } from '@grafana/data';
-import { InlineFormLabel, CodeEditor, Select, Input, useStyles2, RadioButtonGroup } from '@grafana/ui';
+import React, { useEffect, useState } from 'react';
+import { InlineFormLabel, CodeEditor, Select, Input, RadioButtonGroup, Icon, Stack } from '@grafana/ui';
 import { EditorRow } from './../../components/extended/EditorRow';
 import { EditorField } from './../../components/extended/EditorField';
-import { Stack } from './../../components/extended/Stack';
 import { isDataQuery } from './../../app/utils';
 import { KeyValueEditor } from './../../components/KeyValuePairEditor';
-import type { InfinityQuery, InfinityURLOptions, QueryBodyContentType, QueryBodyType } from './../../types';
-import type { SelectableValue } from '@grafana/data/types';
+import type { InfinityQuery, InfinityQueryType, InfinityQueryWithURLSource, InfinityURLOptions, QueryBodyContentType, QueryBodyType } from './../../types';
+import type { SelectableValue } from '@grafana/data';
+import { usePrevious } from 'react-use';
 
 export const URLEditor = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange: (value: any) => void; onRunQuery: () => void }) => {
   return isDataQuery(query) && query.source === 'url' ? (
     <EditorRow label="URL options" collapsible={true} collapsed={true} title={() => 'Method, Body, Additional headers & parameters'}>
       <Stack gap={1}>
-        <Method query={query} onChange={onChange} onRunQuery={onRunQuery} />
         <Body query={query} onChange={onChange} onRunQuery={onRunQuery} />
         <Headers query={query} onChange={onChange} onRunQuery={onRunQuery} />
         <QueryParams query={query} onChange={onChange} onRunQuery={onRunQuery} />
@@ -25,11 +22,11 @@ export const URLEditor = ({ query, onChange, onRunQuery }: { query: InfinityQuer
   );
 };
 
-const Method = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange: (value: InfinityQuery) => void; onRunQuery: () => void }) => {
+export const Method = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange: (value: InfinityQuery) => void; onRunQuery: () => void }) => {
   if (!(isDataQuery(query) || query.type === 'uql' || query.type === 'groq')) {
     return <></>;
   }
-  if (query.source === 'inline') {
+  if (query.source === 'inline' || query.source === 'azure-blob') {
     return <></>;
   }
   const URL_METHODS: SelectableValue[] = [
@@ -52,9 +49,9 @@ const Method = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChang
     return <></>;
   }
   return (
-    <EditorField label="HTTP Method">
+    <EditorField label="Method" horizontal={true}>
       <Select
-        width={18}
+        width={16}
         value={URL_METHODS.find((e) => e.value === (query.url_options.method || 'GET'))}
         defaultValue={URL_METHODS.find((e) => e.value === 'GET')}
         options={URL_METHODS}
@@ -64,36 +61,40 @@ const Method = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChang
   );
 };
 
-export const URL = ({ query, onChange, onRunQuery, onShowUrlOptions }: { query: InfinityQuery; onChange: (value: InfinityQuery) => void; onRunQuery: () => void; onShowUrlOptions: () => void }) => {
-  const styles = useStyles2(getStyles);
-  const [url, setURL] = useState((isDataQuery(query) || query.type === 'uql' || query.type === 'groq') && query.source === 'url' ? query.url || '' : '');
-  if (!(isDataQuery(query) || query.type === 'uql' || query.type === 'groq')) {
-    return <></>;
-  }
-  if (query.source !== 'url') {
-    return <></>;
-  }
+export const URL = ({
+  query,
+  onChange,
+  onRunQuery,
+  onShowUrlOptions,
+}: {
+  query: InfinityQueryWithURLSource<InfinityQueryType>;
+  onChange: (value: InfinityQueryWithURLSource<InfinityQueryType>) => void;
+  onRunQuery: () => void;
+  onShowUrlOptions: () => void;
+}) => {
+  const [url, setURL] = useState(query.url);
+  const previousUrl = usePrevious(query.url);
+
+  useEffect(() => {
+    if (query.url !== previousUrl && query.url !== url) {
+      setURL(query.url);
+    }
+  }, [query.url, previousUrl, url]);
+
   const onURLChange = () => {
     onChange({ ...query, url });
     onRunQuery();
   };
+
   return (
-    <EditorField
-      label="URL"
-      tooltip="Click options configure HTTP Method, Body, Additional headers and Query parameters"
-      promoNode={
-        <span title="Method, Body, Headers and Params" onClick={onShowUrlOptions} className={styles.url.promoNode}>
-          Options
-        </span>
-      }
-    >
+    <EditorField label="URL" horizontal={true}>
       <Input
         type="text"
         value={url}
-        placeholder={`https://github.com/yesoreyeram/grafana-infinity-datasource/blob/main/testdata/users.${
+        placeholder={`https://github.com/grafana/grafana-infinity-datasource/blob/main/testdata/users.${
           query.type === 'graphql' || query.type === 'uql' || query.type === 'groq' ? 'json' : query.type
         }`}
-        width={80}
+        width={84}
         onChange={(e) => setURL(e.currentTarget.value)}
         onBlur={onURLChange}
         data-testid="infinity-query-url-input"
@@ -106,7 +107,7 @@ const Headers = ({ query, onChange }: { query: InfinityQuery; onChange: (value: 
   if (!(isDataQuery(query) || query.type === 'uql' || query.type === 'groq')) {
     return <></>;
   }
-  if (query.source === 'inline' || query.source === 'reference') {
+  if (query.source === 'inline' || query.source === 'reference' || query.source === 'azure-blob') {
     return <></>;
   }
   const defaultHeader = {
@@ -129,7 +130,7 @@ const QueryParams = ({ query, onChange, onRunQuery }: { query: InfinityQuery; on
   if (!(isDataQuery(query) || query.type === 'uql' || query.type === 'groq')) {
     return <></>;
   }
-  if (query.source === 'inline' || query.source === 'reference') {
+  if (query.source === 'inline' || query.source === 'reference' || query.source === 'azure-blob') {
     return <></>;
   }
   const defaultParam = {
@@ -152,10 +153,11 @@ const Body = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange:
   if (!(isDataQuery(query) || query.type === 'uql' || query.type === 'groq')) {
     return <></>;
   }
-  if (query.source === 'inline' || query.source === 'reference') {
+  if (query.source === 'inline' || query.source === 'reference' || query.source === 'azure-blob') {
     return <></>;
   }
   const placeholderGraphQLQuery = `{ query : { }}`;
+  const placeholderGraphQLVariables = `{ }`;
   const onURLOptionsChange = <K extends keyof InfinityURLOptions, V extends InfinityURLOptions[K]>(key: K, value: V) => {
     onChange({ ...query, url_options: { ...query.url_options, [key]: value } });
   };
@@ -195,6 +197,48 @@ const Body = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange:
                     onBlur={(e) => onURLOptionsChange('body_graphql_query', e)}
                   />
                 </EditorField>
+                <br />
+                <EditorField label="GraphQL Variables" tooltip={placeholderGraphQLVariables}>
+                  <CodeEditor
+                    language="json"
+                    height={'200px'}
+                    value={query.url_options?.body_graphql_variables || placeholderGraphQLVariables}
+                    onSave={(e) => onURLOptionsChange('body_graphql_variables', e)}
+                    onBlur={(e) => onURLOptionsChange('body_graphql_variables', e)}
+                    // onEditorDidMount={(editor, monaco) => {
+                    //   monaco.editor.defineTheme('graphqlVariableEditorTheme', {
+                    //     base: 'vs-dark',
+                    //     inherit: true,
+                    //     rules: [{ token: 'grafanaVariable', foreground: '#ff9922', fontStyle: ' italic' }],
+                    //     colors: {},
+                    //   });
+                    //   monaco.editor.setTheme('graphqlVariableEditorTheme');
+                    //   monaco.languages.setMonarchTokensProvider('json', {
+                    //     tokenizer: {
+                    //       root: [
+                    //         [
+                    //           /@?[a-zA-Z][\w$]*/,
+                    //           {
+                    //             cases: {
+                    //               '@default': 'string',
+                    //             },
+                    //           },
+                    //         ],
+                    //         [/[{}()\[\]]/, '@brackets'],
+                    //         [/".*?":/, 'variable'],
+                    //         [/["|']?\${.*}["|']?/, 'grafanaVariable'],
+                    //         [/\d*\.|d+([eE][\-+]?\d+)?/, 'number.float'],
+                    //         [/0[xX][0-9a-fA-F]+/, 'number.hex'],
+                    //         [/\d+/, 'number'],
+                    //       ],
+                    //     },
+                    //   });
+                    //   monaco.languages.json.jsonDefaults.setModeConfiguration({
+                    //     colors: true,
+                    //   });
+                    // }}
+                  />
+                </EditorField>
               </>
             )}
             {(query.url_options?.body_type === 'raw' || !query.url_options?.body_type) && (
@@ -216,23 +260,25 @@ const Body = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange:
                 </div>
                 <div className="gf-form">
                   <InlineFormLabel width={15}>Body Content</InlineFormLabel>
+                  <Icon name="arrow-down" style={{ marginTop: '10px' }} />
                 </div>
                 <CodeEditor
                   language={
                     query.url_options?.body_content_type === 'application/json'
                       ? 'json'
                       : query.url_options?.body_content_type === 'application/xml'
-                      ? 'xml'
-                      : query.url_options?.body_content_type === 'text/html'
-                      ? 'html'
-                      : query.url_options?.body_content_type === 'application/javascript'
-                      ? 'javascript'
-                      : query.url_options?.body_content_type === 'text/plain'
-                      ? 'text'
-                      : 'text'
+                        ? 'xml'
+                        : query.url_options?.body_content_type === 'text/html'
+                          ? 'html'
+                          : query.url_options?.body_content_type === 'application/javascript'
+                            ? 'javascript'
+                            : query.url_options?.body_content_type === 'text/plain'
+                              ? 'text'
+                              : 'text'
                   }
                   height={'200px'}
                   value={query.url_options?.data || ''}
+                  {...{ placeholder: 'Enter you' }}
                   onSave={(e) => {
                     onURLOptionsChange('data', e);
                     onRunQuery();
@@ -251,15 +297,4 @@ const Body = ({ query, onChange, onRunQuery }: { query: InfinityQuery; onChange:
   ) : (
     <></>
   );
-};
-
-const getStyles = (theme: GrafanaTheme2) => {
-  return {
-    url: {
-      promoNode: css({
-        marginLeft: '10px',
-        color: theme.colors.info.border,
-      }),
-    },
-  };
 };

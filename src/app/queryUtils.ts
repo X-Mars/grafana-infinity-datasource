@@ -1,8 +1,7 @@
 import { interpolateQuery } from './../interpolate';
 import { migrateQuery } from './../migrate';
-import { isDataQuery, normalizeURL } from './utils';
 import type { GlobalInfinityQuery, InfinityInstanceSettings, InfinityOptions, InfinityQuery } from './../types';
-import type { DataQueryRequest, DataSourceInstanceSettings, ScopedVars } from '@grafana/data/types';
+import type { DataQueryRequest, DataSourceInstanceSettings, ScopedVars } from '@grafana/data';
 
 export const overrideWithGlobalQuery = (t: InfinityQuery, instanceSettings: DataSourceInstanceSettings<InfinityOptions>): InfinityQuery => {
   if (t.type === 'global' && t.global_query_id && instanceSettings.jsonData.global_queries && instanceSettings.jsonData.global_queries.length > 0) {
@@ -19,6 +18,8 @@ export const IsValidInfinityQuery = (query: InfinityQuery): boolean => {
       return query.url !== undefined && query.url !== '';
     } else if (query.source === 'reference') {
       return query.referenceName !== undefined && query.referenceName !== '';
+    } else if (query.source === 'azure-blob') {
+      return query.azBlobName === '' || query.azContainerName === '';
     } else {
       return query.data !== undefined && query.data !== '';
     }
@@ -46,13 +47,5 @@ export const getUpdatedDataRequest = (options: DataQueryRequest<InfinityQuery>, 
 };
 
 export const interpolateVariablesInQueries = (queries: InfinityQuery[], scopedVars: ScopedVars): InfinityQuery[] => {
-  return queries
-    .map((t) => migrateQuery(t))
-    .map((t) => interpolateQuery(t, scopedVars))
-    .map((t) => {
-      if (isDataQuery(t) && t.source === 'url') {
-        t.url = normalizeURL(t.url);
-      }
-      return t;
-    });
+  return queries.map((t) => migrateQuery(t)).map((t) => interpolateQuery(t, scopedVars));
 };

@@ -1,6 +1,323 @@
 # Change Log
 
-Change history of the project. All the feature updates, bug fixes, breaking changes will be documented here.
+## 3.0.0-beta.1
+
+🚀 **New Feature**: Support for passing grafana meta data such as user id, datasource uid to the underlying API as headers / query params via datasource settings
+🚀 **Improvements**: Added support for gzip compression for outgoing requests by default. Fixes [#1003](https://github.com/grafana/grafana-infinity-datasource/issues/1003)
+🚀 **Improvements**: Added frame type to dataplane compliant numeric data frames. This will help us to handle the results correctly in alerts, recorded queries, SSE etc.
+🎉 **Chore**: BREAKING: Plugin now requires Grafana 10.4.8 or newer
+
+## 2.12.2
+
+🐛 Build and publish pipelines uses latest go lang version `1.23.5` which includes security fixes to the `crypto/x509` and `net/http` packages ( CVE-2024-45341 and CVE-2024-45336 ). More details can be found [here](https://groups.google.com/g/golang-announce/c/sSaUhLA-2SI)
+
+🐛 **Bug fix**: Fixed error source for invalid queries
+
+⚙️ **Chore**: Updated backend plugin SDK `github.com/grafana/grafana-plugin-sdk-go` from `0.261.0` to `0.263.0`
+
+## 2.12.1
+
+⚙️ **Chore**: Updated `cross-spawn` to `7.0.6`
+
+## 2.12.0
+
+🚀 **Improvement**: Injection trace into req.head (#1088)
+
+⚙️ **Chore**: Updated `nanoid` from `3.3.7` to `3.3.8`
+
+⚙️ **Chore**: Updated backend plugin SDK `github.com/grafana/grafana-plugin-sdk-go` from `0.259.0` to `0.261.0`
+
+🐛 **Bug fix**: Fixed height of the text area
+
+## 2.11.4
+
+🐛 **Bug fix**: Fixed error source for invalid queries
+
+🐛 **Bug fix**: Fixed a bug where base url not working as expected when there is no url in the query. Fixes [#908](https://github.com/grafana/grafana-infinity-datasource/issues/908)
+
+⚙️ **Chore**: Migrate legacy forms component in global queries editor
+
+## 2.11.3
+
+🐛 **Bug fix**: Fixes the panic when preparing the request throws error
+
+🐛 **Bug fix**: Fixed a bug where gitlab urls were normalized incorrectly
+
+⚙️ **Chore**: Updated `jsonpath-plus` to `10.2.0`
+
+## 2.11.2
+
+⚙️ **Chore**: Updated backend plugin SDK `github.com/grafana/grafana-plugin-sdk-go` from `0.255.0` to `0.258.0`
+
+⚙️ **Chore**: Updated frontend dependency `jsonpath-plus` from `10.0.1` to `10.1.0`
+
+⚙️ **Chore**: Updated frontend indirect dependency `uplot` to `1.6.31`
+
+## 2.11.1
+
+🐛 **Bug fix**: Fix downstream errors for ErrExpressionNotFoundInFields and ErrInvalidFilterExpression
+
+⚙️ **Chore**: Bump `github.com/grafana/grafana-plugin-sdk-go` from `0.248.0` to `0.255.0`
+
+⚙️ **Chore**: Bump `jsonpath-plus` to `10.0.1`
+
+## 2.11.0
+
+🚀 **Improvement**: Remove base URL deprecation
+
+🐛 **Bug fix**: Fix forward oauth for x-id-token header
+
+## 2.10.0
+
+🚀 **Improvement**: Remove deprecation for base URL and move it to URL, Headers & Params
+
+🐛 **Bug fix**: Fix error source for identified downstream errors
+
+⚙️ **Chore**: Bump `github.com/grafana/grafana-plugin-sdk-go` from `0.241.0` to `0.248.0`
+
+⚙️ **Chore**: Bump `path-to-regexp` from `1.8.0` to `1.9.0`
+
+## 2.9.6
+
+🐛 **Bug fix**: Fix error source for invalid JSONata errors
+
+⚙️ **Chore**: Bump `github.com/grafana/grafana-plugin-sdk-go` from `0.241.0` to `0.245.0`
+
+⚙️ **Chore**: Update level of non-error log lines from error to debug
+
+⚙️ **Chore**: Bump `webpack` from `5.86.0` to `5.94.0`
+
+⚙️ **Chore**: Bump `webpack` from `5.86.0` to `5.94.0`
+
+⚙️ **Chore**: Bump `micromatch` from `4.0.7` to `4.0.8`
+
+## 2.9.5
+
+⚙️ **Chore**: Rudderstack event firing updated
+
+## 2.9.4
+
+🐛 **Bug fix**: Fix query cancellation
+
+⚙️ **Chore**: Add vscode debugger configuration
+
+## 2.9.3
+
+🐛 **Chore**: Updated error source capturing
+
+## 2.9.2
+
+🚀 **Chore**: Logging improvements
+
+## 2.9.1
+
+🚀 **Chore**: Upgrade grafana-plugin-sdk-go to `v0.240.0` from `v0.239.0`
+
+## 2.9.0
+
+🚀 **UQL**: Updated uql library to [0.0.23](https://github.com/yesoreyeram/uql/blob/main/CHANGELOG.md#0023)
+
+🚀 **Chore** Replaced backend framer libraries from [yesoreyeram/grafana-plugins](https://github.com/yesoreyeram/grafana-plugins) to [grafana/infinity-libs](https://github.com/grafana/infinity-libs)
+
+⚙️ **Chore**: Add error source to error responses
+
+⚙️ **Chore**: Upgrade grafana-plugin-sdk-go to `v0.239.0` from `v0.231.0`
+
+🐛 **Bug fix**: Fix showing of correct URL when using query history
+
+## 2.8.0
+
+⚙️ **Chore**: backend datasource.serve method migrated to datasource.manage method
+
+🐛 **Bug fix**: Fixed a bug where filters not working in variables editor
+
+## 2.7.1
+
+🚀 **Time macros**: Added custom time macros `${__timeFrom}` and `${__timeTo}`. Read more about this [here](https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource/latest/query/macros).
+
+## 2.7.0
+
+🚀 **URL parameters encoding**: Add support for encoding space characters in URLs with **%20** instead of **+**. (Experimental feature)
+
+🚀 **Feature**: Alias support for the backend summarize option
+
+🐛 **Variables Editor**: Fixed a bug where column selectors weren't working in variables editor
+
+⚙️ **Chore**: Backend binaries are now compiled with golang 1.22.3
+
+## 2.6.3
+
+🐛 **Chore** update dependencies
+
+## 2.6.2
+
+🚀 **Security** New settings to block/allow/warn sensitive queries in the dashboard. Read more about this in [the docs](https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource/latest/setup/configuration/).
+
+## 2.6.1
+
+🐛 **Chore** UQL dependency updated to `0.0.22` from `0.0.21`
+
+📜 **Docs** [Docs website](https://grafana.com/docs/plugins/yesoreyeram-infinity-datasource) update with [play.grafana](https://play.grafana.org/d/infinity) links
+
+## 2.6.0
+
+⚙️ **Chore**: Upgrade grafana-plugin-sdk-go to v0.220.0
+
+🚀 **Improvement**: Improved health check for azure blob storage connections
+
+🚀 **Feature**: Support for variables in azure blob storage container and blob name
+
+🐛 **Bug fixes**: Fixed a bug where AWS authentication doesn't work since 2.5.0-beta.1
+
+## 2.5.0
+
+🚀 **PDC**: Added support for [grafana private datasource connect (PDC)](https://grafana.com/docs/grafana-cloud/connect-externally-hosted/private-data-source-connect/)
+
+🛡️ **Security** Backend binaries compiled with go 1.22.1 which includes [security patches](https://groups.google.com/g/golang-announce/c/5pwGVUPoMbg)
+
+⚙️ **Dependencies update**: NodeJS dev dependency updated from Node 18 to Node 20
+
+⚙️ **Dependencies update**: Updated backend dependencies and plugin SDK update
+
+⚙️ **Chore**: Replaced gorilla mux library with http.ServeMux from standard library
+
+⚙️ **Chore**: Removed unused graphql and open-api resource calls
+
+## 2.5.0-beta.1
+
+🚀 **Chore**: Updated health check messages to include details about custom health check settings
+
+🚀 **Authentication**: Updated digest authentication backend SDK from [`github.com/xinsnake/go-http-digest-auth-client`](https://github.com/xinsnake/go-http-digest-auth-client) to [`github.com/icholy/digest`](https://github.com/icholy/digest)
+
+🐛 **Analytics**: Updated rudderstack analytics events
+
+🐛 **Bug fixes**: Fixed a bug where query columns editor is unusable when sandbox enabled
+
+⚙️ **Chore**: Updated the grafana plugin SDK from v0.197.0 to v0.206.0
+
+## 2.4.0
+
+🚀 **Chore**: Minimum supported grafana version updated to 9.5.15
+
+🚀 **Variables**:Added support for variables in the backend parser root selector
+
+🐛 **Variables**: Better support for variable handling when variable queries have more than 1 column
+
+🐛 **Bug fixes**: Fixed a bug where variable values were not passed with the nested variable queries
+
+⚙️ **Chore**: Updated the grafana plugin SDK from v0.193.0 to v0.197.0
+
+⚙️ **Chore**:Plugin build system migrated from `@grafana/toolkit` to `@grafana/create-plugin`
+
+⚙️ **Chore**: NodeJS dev dependency updated from Node 16 to Node 18
+
+## 2.3.1
+
+⚙️ **Chore**: Updated the backend dependencies
+
+⚙️ **Chore**: Signed the plugin with `Grafana Labs` signature instead `Community`
+
+⚙️ **Chore**: Built and published via `drone ci` instead `github actions`
+
+## 2.3.0
+
+🎉 Infinity datasource plugin is now officially maintained by Grafana Labs. Read more about this in the [blog post](https://grafana.com/blog/2024/02/05/infinity-plugin-for-grafana-grafana-labs-will-now-maintain-the-versatile-data-source-plugin/)
+
+## 2.2.1
+
+⚙️ **Chore**: Added distributed tracing and contextual logging
+
+🐛 **UI** Removed graphql variable editor styling
+
+## 2.2.0
+
+🚀 **Proxy**: Support for configuring per-datasource proxy url
+
+🚀 **GraphQL**: Added Support for GraphQL Variables
+
+🐛 **OAuth2**: Fixes OAuth2 configuration UI crash
+
+## 2.1.0
+
+🚀 **OAuth2**: Added ability to set auth style in client credentials
+
+🚀 **Azure blob storage**: Support for reading content from Azure Blog Storage
+
+🚀 **Logs**: Added support for visualizing data in `logs` format
+
+🚀 **Trace**: Added support for visualizing data in `trace` format
+
+🚀 **Macros**: Added support for macros in computed columns and filter expression when used with backend parser
+
+🚀 **URL**: Support for gitlab blob to raw URL conversion added
+
+🚀 **URL**: Support for bitbucket blob to raw URL conversion added
+
+🚀 **Parser**: Added support for explicit boolean parsing in default and backend parsers
+
+🚀 **Config Editor**: Preview / Sample request added to some authentication types
+
+🛡️ **Security**: Backend binaries are compiled with golang 1.21.3 which also contains [security fixes](https://groups.google.com/g/golang-announce/c/2q13H6LEEx0) from previous versions
+
+🐛 **UI**: Fixed a bug in query editor where buttons were rendered incorrectly
+
+🐛 **OAuth2**: Applied a fix for the UI crash when editing OAuth2 section in the config editor
+
+🐛 **URL normalization**: Fixed a bug where some github URLs were interpolated incorrectly. Fixes [#604](https://github.com/grafana/grafana-infinity-datasource/issues/604)
+
+🐛 **Test**: Fixed a bug in tests
+
+🐛 **Docs**: Removed `Cmd/Ctrl+F` key binding in the docs website in favour of native browser search
+
+⚙️ **Chore**: Grafana plugin SDK `grafana/grafana-plugin-sdk-go` updated to `v0.174.0` from `v0.189.0`
+
+⚙️ **Chore**: Updated backend packages
+
+⚙️ **Test** More test data/examples added
+
+## 2.0.0
+
+🎉 **Pagination**: Added pagination support for json type queries ( backend parser ). Refer [this github discussion](https://github.com/grafana/grafana-infinity-datasource/discussions/601) for more details
+
+🎉 **Transformation**: Added support for server side transformations via transformations query type. This version supports transformations such as `limit`, `filterExpression`, `computedColumn` and `summarize`. Refer [this github discussion](https://github.com/grafana/grafana-infinity-datasource/discussions/614) for more details
+
+🚀 **Health Check**: Added support for custom health check
+
+🚀 **Config editor**: Updated config editor UI
+
+🐛 **Logging**: Updated backend logging for improved debugging experience
+
+🐛 **docs**: updated docs about user agent header
+
+🐛 **Logging**: Consuming `reportInteraction` from the `@grafana/runtime` library for reporting queries
+
+⚙️ **Chore**: Added changeset to the build/publish pipeline
+
+⚙️ **Chore**: update grafana backend plugin SDK from v0.159.0 to v0.162.0
+
+⚙️ **Chore**: Backend binaries are now compiled with Go 1.20.4 which contains **security patches**
+
+## [ 1.4.1 ]
+
+- **UQL** Support for `pivot` function added in UQL
+- **Chore** Backend binaries are now compiled with Go 1.20.3 which contains **security patches**
+- **Chore** Updated frontend dependencies including security **security patches**
+
+## [ 1.4.0 ]
+
+- **Variables** Support for custom display values in variables ( using `__text` and `__value` as field names )
+- **Backend parser** Added support for numeric datetime (ex: 20221227 can now be treated as valid datetime with YYYYMMDD format)
+- **Global variables** Support for global time variables `${__from}` and `${__to}` in backend queries
+- **Bug fix** Fixes [a bug](https://github.com/grafana/grafana-infinity-datasource/issues/509) where variables weren't interpolated with xml/html backend queries.
+- **Bug fix** Fixed [a bug](https://github.com/grafana/grafana-infinity-datasource/issues/453) where BOM encoded response weren't parsed correctly
+- **Auth** Health check validation updated
+- **Docs** Docs site UI update
+
+## [ 1.3.0 ]
+
+- **Auth** Added support for **AWS authentication** using AWS Access and AWS Secret key
+- **UQL** Support for new methods `atob`, `btoa` and `substring`
+- **Chore** Backend binaries are now compiled with Go 1.19.5
 
 ## [ 1.2.0 ]
 
@@ -31,7 +348,7 @@ Change history of the project. All the feature updates, bug fixes, breaking chan
 ## [ 1.0.1 ]
 
 - **Macros/Variables** Global variables in queries such as `${__user.name}`,`${__user.email}` and `${__user.login}` interpolated correctly in server side
-- **Bug fix** Fixed a bug where editor crashes when using POST method in variable editor. Fixes [#413](https://github.com/yesoreyeram/grafana-infinity-datasource/issues/413)
+- **Bug fix** Fixed a bug where editor crashes when using POST method in variable editor. Fixes [#413](https://github.com/grafana/grafana-infinity-datasource/issues/413)
 
 ## [ 1.0.0 ]
 
@@ -69,7 +386,7 @@ jsonData:
 
 If the allowed hosts are not configured correctly, you will get `Datasource is missing allowed hosts/URLs. Configure it in the datasource settings page.` error when performing the query.
 
-Learn more about this breaking change in the [github discussion](https://github.com/yesoreyeram/grafana-infinity-datasource/discussions/322)
+Learn more about this breaking change in the [github discussion](https://github.com/grafana/grafana-infinity-datasource/discussions/322)
 
 #### **Content-Type and Accept headers**
 
@@ -149,7 +466,7 @@ Minimum required grafana version for the infinity plugin is now Grafana v8.4.7. 
 - "as-is" data format added for debugging
 - comma in the numbers are now ignored and considered as number
 - variable editor, global query editor bug fixes. Previously, unable to add columns in variable editor
-- fixes [#191](https://github.com/yesoreyeram/grafana-infinity-datasource/issues/191), [#146](https://github.com/yesoreyeram/grafana-infinity-datasource/issues/146), [#210](https://github.com/yesoreyeram/grafana-infinity-datasource/issues/210)
+- fixes [#191](https://github.com/grafana/grafana-infinity-datasource/issues/191), [#146](https://github.com/grafana/grafana-infinity-datasource/issues/146), [#210](https://github.com/grafana/grafana-infinity-datasource/issues/210)
 
 ## [ 0.7.10 ]
 
@@ -198,7 +515,7 @@ Minimum required grafana version for the infinity plugin is now Grafana v8.4.7. 
 
 ## [ 0.7.1 ]
 
-- Fix for [mixed datasource mode not working in 0.7](https://github.com/yesoreyeram/grafana-infinity-datasource/issues/78)
+- Fix for [mixed datasource mode not working in 0.7](https://github.com/grafana/grafana-infinity-datasource/issues/78)
 
 ## [ 0.7.0 ]
 
